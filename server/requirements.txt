@@ -1,0 +1,7 @@
+psutil
+pyscreenshot
+flask
+pillow
+flask-cors
+pyroute2
+werkzeug
