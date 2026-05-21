@@ -11,6 +11,7 @@ import platform
 import subprocess
 
 path = os.path.dirname(os.path.abspath(__file__))
+os.makedirs(path + '/static', exist_ok=True)
 
 app = Flask(__name__, static_folder= path + '/static')
 CORS(app)
