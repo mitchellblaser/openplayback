@@ -6,6 +6,15 @@ set -e
 echo "OpenPlayback Post Install Script"
 echo "===================================="
 
+echo "Configuration..."
+echo "Please enter your desired hostname. (eg. openplayback-1)"
+read -p ">>> " newhostname
+
+echo ""
+echo "Setting hostname..."
+hostnamectl set-hostname $newhostname
+sudo sed -i "s/^127\.0\.1\.1.*/127.0.1.1\t$newhostname/" /etc/hosts
+
 echo "Updating System..."
 apt update && apt upgrade -y
 
@@ -83,7 +92,7 @@ cd /home/openplayback/openplayback/server
 # Wait for desktop/network
 sleep 5
 
-python3 app.py >> /var/log/openplayback.log 2>&1
+python3 ./openplayback-server.py
 EOF
 
 chmod +x /usr/local/bin/openplayback-start.sh
@@ -112,6 +121,9 @@ systemctl enable openplayback.service
 
 echo "Installing python3 packages..."
 pip install -r /home/openplayback/openplayback/server/requirements.txt --break-system-packages
+
+echo "Fixing file ownership..."
+chown -R openplayback:openplayback /home/openplayback
 
 echo "Installation Finished. Rebooting..."
 /sbin/reboot

@@ -39,5 +39,5 @@ Run the following commands to download and execute the postinstall script.
 
 ```bash
 su - #(login with password openplayback)
-apt install curl -y && curl -sL <URL> | bash
+bash -c "$(wget -O - https://github.com/mitchellblaser/openplayback/raw/refs/heads/main/server-os/postinstall.sh)"
 ```
