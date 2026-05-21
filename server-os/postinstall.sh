@@ -6,15 +6,6 @@ set -e
 echo "OpenPlayback Post Install Script"
 echo "===================================="
 
-echo "Configuration..."
-echo "Please enter your desired hostname. (eg. openplayback-1)"
-read -p ">>> " newhostname
-
-echo ""
-echo "Setting hostname..."
-hostnamectl set-hostname $newhostname
-sudo sed -i "s/^127\.0\.1\.1.*/127.0.1.1\t$newhostname/" /etc/hosts
-
 echo "Updating System..."
 apt update && apt upgrade -y
 
@@ -92,6 +83,19 @@ cd /home/openplayback/openplayback/server
 # Wait for desktop/network
 sleep 5
 
+# Disable wallpaper
+xfconf-query -c xfce4-desktop -p /desktop-icons/style -s 0
+
+# Force black wallpaper on all monitors
+for monitor in \$(xfconf-query -c xfce4-desktop -l | grep "/backdrop/" | grep "last-image" | sed 's|/last-image||'); do
+    xfconf-query -c xfce4-desktop -p "\$monitor/image-style" -s 0
+    xfconf-query -c xfce4-desktop -p "\$monitor/color-style" -s 0
+
+    xfconf-query -c xfce4-desktop -p "\$monitor/rgba1" \
+        -t double -t double -t double -t double \
+        -s 0 -s 0 -s 0 -s 1
+done
+
 python3 ./openplayback-server.py
 EOF
 
@@ -124,6 +128,16 @@ pip install -r /home/openplayback/openplayback/server/requirements.txt --break-s
 
 echo "Fixing file ownership..."
 chown -R openplayback:openplayback /home/openplayback
+
+echo "Configuration..."
+echo "Please enter your desired hostname. (eg. openplayback-1)"
+read -p ">>> " newhostname
+
+echo ""
+echo "Setting hostname..."
+hostnamectl set-hostname $newhostname
+sudo sed -i "s/^127\.0\.1\.1.*/127.0.1.1\t$newhostname/" /etc/hosts
+
 
 echo "Installation Finished. Rebooting..."
 /sbin/reboot
