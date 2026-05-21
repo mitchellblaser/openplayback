@@ -1,3 +1,5 @@
+import React, { useEffect, useState, useRef } from 'react';
+
 export default function ServerPreview({ selectedServer }) {
 
   const imgRef = useRef(null);
