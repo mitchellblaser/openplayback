@@ -40,3 +40,15 @@ su - #(login with password openplayback)
 apt install wget -y
 bash -c "$(wget -O - https://github.com/mitchellblaser/openplayback/raw/refs/heads/main/server-os/postinstall.sh)"
 ```
+
+### Step 7: Disable wallpaper
+
+This has to happen manually
+
+```bash
+cd /usr/share/backgrounds/xfce/
+sudo rm ./xfce-x.svg
+curl -O https://github.com/mitchellblaser/openplayback/raw/refs/heads/main/server-os/black-wallpaper.svg
+sudo mv black-wallpaper.svg xfce-x.svg
+
+```

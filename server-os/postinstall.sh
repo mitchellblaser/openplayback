@@ -31,7 +31,7 @@ echo "Cloning OpenPlayback Repository..."
 git clone https://github.com/mitchellblaser/openplayback /home/openplayback/openplayback
 
 echo "Configuring LightDM Auto Login..."
-sed -i '/^\[Seat:\*\]/a autologin-user=openplayback\nautologin-user-timeout=0' /etc/lightdm/lightdm.conf
+sed -i '/^\[Seat:\*\]/a autologin-user=openplayback\nautologin-user-timeout=0\nxserver-command=X -nocursor\n' /etc/lightdm/lightdm.conf
 
 
 echo "Removing normal Desktop Environment things..."
@@ -120,47 +120,6 @@ echo "Replacing default wallpaper..."
 curl -O https://github.com/mitchellblaser/openplayback/raw/refs/heads/main/server-os/black-wallpaper.svg
 rm /usr/share/backgrounds/xfce/xfce-x.svg
 cp ./black-wallpaper.svg /usr/share/backgrounds/xfce/xfce-x.svg
-
-CONFIG_FILE="/etc/lightdm/lightdm.conf"
-
-echo "Configuring LightDM to hide the mouse cursor..."
-
-# Ensure the config file exists
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "Creating $CONFIG_FILE..."
-    sudo touch "$CONFIG_FILE"
-fi
-
-# Ensure [Seat:*] section exists
-if ! grep -q "^\[Seat:\*\]" "$CONFIG_FILE"; then
-    echo "" | sudo tee -a "$CONFIG_FILE" > /dev/null
-    echo "[Seat:*]" | sudo tee -a "$CONFIG_FILE" > /dev/null
-fi
-
-# Remove any existing xserver-command lines
-sudo sed -i '/^#\?xserver-command=/d' "$CONFIG_FILE"
-
-# Add the new xserver-command under [Seat:*]
-sudo awk '
-BEGIN { added=0 }
-/^\[Seat:\*\]/ {
-    print
-    print "xserver-command=X -nocursor"
-    added=1
-    next
-}
-{ print }
-END {
-    if (!added) {
-        print "[Seat:*]"
-        print "xserver-command=X -nocursor"
-    }
-}
-' "$CONFIG_FILE" | sudo tee "${CONFIG_FILE}.tmp" > /dev/null
-
-sudo mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
-
-echo "Configuration updated successfully."
 
 echo "Configuration..."
 echo "Please enter your desired hostname. (eg. openplayback-1)"
