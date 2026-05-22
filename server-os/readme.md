@@ -1,7 +1,5 @@
 # OpenPlayback OS - Installation Steps
 
-## Installing the Debian Base
-
 ### Step 1: Installation
 Please download the latest Debian Netinst Image and flash it to a USB. <br>
 <b>Ensure you are connected to the internet for the installation, via ethernet and DHCP!!</b>
@@ -39,5 +37,6 @@ Run the following commands to download and execute the postinstall script.
 
 ```bash
 su - #(login with password openplayback)
+apt install wget -y
 bash -c "$(wget -O - https://github.com/mitchellblaser/openplayback/raw/refs/heads/main/server-os/postinstall.sh)"
 ```

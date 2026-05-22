@@ -10,7 +10,7 @@ echo "Updating System..."
 apt update && apt upgrade -y
 
 echo "Installing core packages..."
-apt install -y git wget curl build-essential nano tmux sudo grep coreutils
+apt install -y git wget curl build-essential nano tmux sudo grep coreutils network-manager
 
 echo "Adding user to sudoers group..."
 usermod -aG sudo openplayback
@@ -83,19 +83,6 @@ cd /home/openplayback/openplayback/server
 # Wait for desktop/network
 sleep 5
 
-# Disable wallpaper
-xfconf-query -c xfce4-desktop -p /desktop-icons/style -s 0
-
-# Force black wallpaper on all monitors
-for monitor in \$(xfconf-query -c xfce4-desktop -l | grep "/backdrop/" | grep "last-image" | sed 's|/last-image||'); do
-    xfconf-query -c xfce4-desktop -p "\$monitor/image-style" -s 0
-    xfconf-query -c xfce4-desktop -p "\$monitor/color-style" -s 0
-
-    xfconf-query -c xfce4-desktop -p "\$monitor/rgba1" \
-        -t double -t double -t double -t double \
-        -s 0 -s 0 -s 0 -s 1
-done
-
 python3 ./openplayback-server.py
 EOF
 
@@ -128,6 +115,52 @@ pip install -r /home/openplayback/openplayback/server/requirements.txt --break-s
 
 echo "Fixing file ownership..."
 chown -R openplayback:openplayback /home/openplayback
+
+echo "Replacing default wallpaper..."
+curl -O https://github.com/mitchellblaser/openplayback/raw/refs/heads/main/server-os/black-wallpaper.svg
+rm /usr/share/backgrounds/xfce/xfce-x.svg
+cp ./black-wallpaper.svg /usr/share/backgrounds/xfce/xfce-x.svg
+
+CONFIG_FILE="/etc/lightdm/lightdm.conf"
+
+echo "Configuring LightDM to hide the mouse cursor..."
+
+# Ensure the config file exists
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Creating $CONFIG_FILE..."
+    sudo touch "$CONFIG_FILE"
+fi
+
+# Ensure [Seat:*] section exists
+if ! grep -q "^\[Seat:\*\]" "$CONFIG_FILE"; then
+    echo "" | sudo tee -a "$CONFIG_FILE" > /dev/null
+    echo "[Seat:*]" | sudo tee -a "$CONFIG_FILE" > /dev/null
+fi
+
+# Remove any existing xserver-command lines
+sudo sed -i '/^#\?xserver-command=/d' "$CONFIG_FILE"
+
+# Add the new xserver-command under [Seat:*]
+sudo awk '
+BEGIN { added=0 }
+/^\[Seat:\*\]/ {
+    print
+    print "xserver-command=X -nocursor"
+    added=1
+    next
+}
+{ print }
+END {
+    if (!added) {
+        print "[Seat:*]"
+        print "xserver-command=X -nocursor"
+    }
+}
+' "$CONFIG_FILE" | sudo tee "${CONFIG_FILE}.tmp" > /dev/null
+
+sudo mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+
+echo "Configuration updated successfully."
 
 echo "Configuration..."
 echo "Please enter your desired hostname. (eg. openplayback-1)"
